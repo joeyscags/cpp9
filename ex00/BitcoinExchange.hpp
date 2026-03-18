@@ -15,6 +15,10 @@ public:
     void    processInput(const std::string& filename);
 
 private:
+    bool    isLeapYear(int year) const;
+    bool    isValidDate(const std::string& date) const;
+    bool    isValidValue(const std::string& valueStr, double& value) const;
+
     std::map<std::string, double> _db;
 };
 
