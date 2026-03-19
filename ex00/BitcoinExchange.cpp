@@ -1,6 +1,9 @@
 #include "BitcoinExchange.hpp"
 #include <cctype>
 #include <cstdlib>
+#include <fstream>
+#include <sstream>
+#include <stdexcept>
 
 BitcoinExchange::BitcoinExchange() {}
 
@@ -65,7 +68,39 @@ bool BitcoinExchange::isValidValue(const std::string& valueStr, double& value) c
 }
 
 void BitcoinExchange::loadDatabase(const std::string& filename) {
-    (void)filename;
+    std::ifstream file(filename.c_str());
+    if (!file.is_open())
+        throw std::runtime_error("Error: could not open file.");
+
+    std::string line;
+    if (!std::getline(file, line))
+        throw std::runtime_error("Error: empty database file.");
+
+    while (std::getline(file, line)) {
+        if (line.empty())
+            continue;
+
+        std::stringstream ss(line);
+        std::string date;
+        std::string rateStr;
+
+        if (!std::getline(ss, date, ','))
+            continue;
+        if (!std::getline(ss, rateStr))
+            continue;
+        if (!isValidDate(date))
+            continue;
+
+        char* end = NULL;
+        const double rate = std::strtod(rateStr.c_str(), &end);
+        if (end == rateStr.c_str() || *end != '\0' || rate < 0.0)
+            continue;
+
+        _db[date] = rate;
+    }
+
+    if (_db.empty())
+        throw std::runtime_error("Error: database contains no valid entries.");
 }
 
 void BitcoinExchange::processInput(const std::string& filename) {
